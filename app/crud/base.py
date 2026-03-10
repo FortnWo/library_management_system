@@ -1,13 +1,19 @@
 # app/crud/base.py
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
-from sqlalchemy.orm import Session
-from app.db.session import Base  # 现在是明确的类，而非变量
-from app.schemas.base import BaseSchema  # 导入 Pydantic 基类
 
-# 修正 TypeVar 绑定
-ModelType = TypeVar("ModelType", bound=Base)  # SQLAlchemy 模型绑定 Base
-CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseSchema)  # Pydantic 创建模型绑定 BaseSchema
-UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseSchema)  # Pydantic 更新模型绑定 BaseSchema
+from sqlalchemy.orm import Session
+from passlib.context import CryptContext
+
+from app.db.session import Base
+from app.schemas.base import BaseSchema
+
+ModelType = TypeVar("ModelType", bound=Base)
+CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseSchema)
+UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseSchema)
+
+# 统一的密码哈希上下文：使用 argon2，完全摆脱 bcrypt 的 72 字节限制
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, model: Type[ModelType]):
@@ -26,10 +32,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
         """创建数据（密码自动加密）"""
         obj_in_data = obj_in.model_dump()
-        # 密码加密
-        if "password" in obj_in_data:
-            from passlib.context import CryptContext
-            pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        # 密码加密（如果提供了明文密码）
+        if "password" in obj_in_data and obj_in_data["password"] is not None:
             obj_in_data["hashed_password"] = pwd_context.hash(obj_in_data.pop("password"))
         
         db_obj = self.model(**obj_in_data)
@@ -46,11 +50,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         obj_in: Union[UpdateSchemaType, Dict[str, Any]]
     ) -> ModelType:
         """更新数据"""
-        obj_data = obj_in.model_dump() if isinstance(obj_in, UpdateSchemaType) else obj_in
+        # 运行时不要用 TypeVar 做 isinstance 判断，这里按基类判断
+        obj_data = obj_in.model_dump() if isinstance(obj_in, BaseSchema) else obj_in
         # 密码加密（如果更新密码）
-        if "password" in obj_data:
-            from passlib.context import CryptContext
-            pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        if "password" in obj_data and obj_data["password"] is not None:
             obj_data["hashed_password"] = pwd_context.hash(obj_data.pop("password"))
         
         for field in obj_data:
