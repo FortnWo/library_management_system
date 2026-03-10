@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     # 项目基础配置
     PROJECT_NAME: str = "LibraryManagementSystem"
     API_V1_STR: str = "/api/v1"
-    DEBUG: bool = False
+    DEBUG: bool = True
     PORT: int = 8000
 
     # MySQL数据库配置（从.env读取）

@@ -10,10 +10,16 @@ from app.models import user, book  # 导入模型，确保创建表
 Base.metadata.create_all(bind=engine)
 logger.info("MySQL数据库表创建成功")
 
+print("DEBUG 模式：", settings.DEBUG)
+print("docs_url 配置：", "/docs" if settings.DEBUG else None)
+
 # 初始化FastAPI应用
 app = FastAPI(
     title=settings.PROJECT_NAME,
     debug=settings.DEBUG,
+    swagger_js_url="https://cdn.bootcdn.net/ajax/libs/swagger-ui/4.18.3/swagger-ui-bundle.js",
+    swagger_css_url="https://cdn.bootcdn.net/ajax/libs/swagger-ui/4.18.3/swagger-ui.css",
+    swagger_ui_init_oauth={},
     docs_url="/docs" if settings.DEBUG else None,  # 生产关闭Swagger
     redoc_url="/redoc" if settings.DEBUG else None  # 生产关闭ReDoc
 )

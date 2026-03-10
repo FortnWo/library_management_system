@@ -1,10 +1,13 @@
+# app/crud/base.py
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from sqlalchemy.orm import Session
-from app.db.session import Base
+from app.db.session import Base  # 现在是明确的类，而非变量
+from app.schemas.base import BaseSchema  # 导入 Pydantic 基类
 
-ModelType = TypeVar("ModelType", bound=Base)
-CreateSchemaType = TypeVar("CreateSchemaType", bound=Base)
-UpdateSchemaType = TypeVar("UpdateSchemaType", bound=Base)
+# 修正 TypeVar 绑定
+ModelType = TypeVar("ModelType", bound=Base)  # SQLAlchemy 模型绑定 Base
+CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseSchema)  # Pydantic 创建模型绑定 BaseSchema
+UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseSchema)  # Pydantic 更新模型绑定 BaseSchema
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, model: Type[ModelType]):
