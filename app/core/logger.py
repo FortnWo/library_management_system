@@ -17,12 +17,12 @@ formatter = logging.Formatter(
     "%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s"
 )
 
-# 1. 控制台处理器（输出到终端）
+# 1. 控制台处理器
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(formatter)
 
-# 2. 文件处理器（输出到文件，按大小切割）
+# 2. 文件处理器（按大小切割）
 file_handler = RotatingFileHandler(
     filename=os.path.join(LOG_DIR, "app.log"),
     maxBytes=10 * 1024 * 1024,  # 10MB
